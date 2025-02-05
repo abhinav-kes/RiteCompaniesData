@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rite Project</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/home-style.css">
+</head>
+
+<body>
+<!-- Navbar -->
+<div class="header">
+    <div class="logo">
+        <img src="/images/ritelogo.jpeg" alt="Logo">
+    </div>
+    <div class="nav">
+        <a href="localhost:8080/home">Home</a>
+        <a href="https://ritesoftware.com/about-us/">About</a>
+        <a href="https://ritesoftware.com/contact-us/">Contact Us</a>
+        <img class="profile" src="/images/blankprofile.png" alt="Profile" onclick="toggleDropdown()">
+        <div class="dropdown" id="dropdown">
+            <div class="user-info">
+                <div class="name" th:text="${username}"></div>
+                <div class="email" th:text="${email}"></div>
+            </div>
+            <div class="logout" onclick="logout()">Log Out</div>
+            <div class="close" onclick="toggleDropdown()">Close</div>
+        </div>
+    </div>
+</div>
+
+<div class="title">Find Companies Matching Your Criteria</div>
+
+<div class="container">
+    <div class="form-container">
+        <div class="form-title">Select Your Preferences</div>
+        <div class="form-group">
+            <label class="form-label" for="location">Location</label>
+            <select class="form-select" id="location" name="location">
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Mumbai">Mumbai</option>
+                <option value="All India">All India</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="erp">ERP</label>
+            <select class="form-select" id="erp" name="erp">
+                <option value="Oracle">Oracle</option>
+                <option value="SAP">SAP</option>
+                <option value="All">All</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="industry">Industry</label>
+            <select class="form-select" id="industry" name="industry">
+            </select>
+        </div>
+    </div>
+
+
+    <button class="form-button" onclick="redirectToNextPage()">Go</button>
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <p>&copy; 2025. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    fetch('http://localhost:8080/industries')
+    .then(response => response.json())
+    .then(industries => {
+        const industrySelect = document.getElementById('industry');
+        industrySelect.innerHTML = '';
+
+        // Predefined options
+        let predefinedIndustries = ['All', 'Finance', 'Business Services','Transportation'];
+
+        // Merge predefined options with fetched industries
+        let allIndustries = [...new Set(predefinedIndustries.concat(industries))];
+
+        // Sort, but keep "All" at the top
+        allIndustries.sort((a, b) => {
+            if (a === 'All') return -1;
+            if (b === 'All') return 1;
+            return a.localeCompare(b);
+        });
+
+        // Append options dynamically
+        allIndustries.forEach(industry => {
+            const option = document.createElement('option');
+            option.value = industry;
+            option.textContent = industry;
+            industrySelect.appendChild(option);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching industries:', error);
+    });
+
+
+
+    fetch('http://localhost:8080/locations')
+        .then(response => response.json())
+        .then(locations => {
+            const locationSelect = document.getElementById('location');
+
+            locationSelect.innerHTML = '';
+
+            const allOption = document.createElement('option');
+            allOption.value = 'All India';
+            allOption.textContent = 'All India';
+            locationSelect.appendChild(allOption);
+            locations.sort((a, b) => a.localeCompare(b));
+
+            locations.forEach(location => {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                locationSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching locations:', error);
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+                // If these values are rendered dynamically (e.g., through Thymeleaf):
+                const username = document.querySelector('.name').textContent;  // Assuming the username is within the element with class 'name'
+                const email = document.querySelector('.email').textContent;  // Assuming the email is within the element with class 'email'
+
+                localStorage.setItem('username', username);
+                localStorage.setItem('email', email);
+            });
+
+            function toggleDropdown() {
+                const dropdown = document.getElementById('dropdown');
+                dropdown.classList.toggle('active');
+            }
+
+            // Simulate logout action
+            function logout() {
+                showCustomAlert('You have logged out.');
+                window.location.href = '/custom-login';
+            }
+
+
+           function redirectToNextPage() {
+               const location = document.getElementById('location').value;
+               const erp = document.getElementById('erp').value;
+               const industry = document.getElementById('industry').value;
+               const url = `http://localhost:8080/companies/filter?location=${encodeURIComponent(location)}&erp=${encodeURIComponent(erp)}&industry=${encodeURIComponent(industry)}`;
+               window.location.href = url;
+           }
+
+             function showCustomAlert(message) {
+                // Create a container for the alert
+                const alertContainer = document.createElement('div');
+                alertContainer.classList.add('custom-alert');
+
+                // Add content to the alert
+                alertContainer.innerHTML = `
+                    <div class="alert-content">
+                        <p>${message}</p>
+                        <button onclick="closeCustomAlert()">Close</button>
+                    </div>
+                `;
+
+                // Add the alert to the body of the document
+                document.body.appendChild(alertContainer);
+            }
+
+            function closeCustomAlert() {
+                const alertContainer = document.querySelector('.custom-alert');
+                if (alertContainer) {
+                    alertContainer.remove();
+                }
+            }
+</script>
+</body>
+</html>

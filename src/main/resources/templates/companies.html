@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:display-style="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rite Project</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/companies-style.css">
+</head>
+
+<body>
+<div class="header">
+    <div class="logo">
+        <img src="/images/ritelogo.jpeg" alt="Logo">
+    </div>
+    <div class="nav">
+        <a href="localhost:8080/home">Home</a>
+        <a href="https://ritesoftware.com/about-us/">About</a>
+        <a href="https://ritesoftware.com/contact-us/">Contact Us</a>
+        <img class="profile" src="/images/blankprofile.png" alt="Profile" onclick="toggleDropdown()">
+        <div class="dropdown" id="dropdown">
+            <div class="user-info">
+                <div class="name" th:text="${username}">John Doe</div>
+                <div class="email" th:text="${email}">john.doe@example.com</div>
+            </div>
+            <div class="logout" onclick="logout()">Log Out</div>
+            <div class="close" onclick="toggleDropdown()">Close</div>
+        </div>
+    </div>
+</div>
+<div class="buttons">
+    <div class="button" id="back">
+        <a onclick="window.history.back()" class="form-button">Back</a>
+    </div>
+
+    <div class="button" id="add">
+        <a class="form-button" onclick="openAddDialog()">Add</a>
+    </div>
+
+    <div class="button" id="delete" style="display:none">
+        <a class="form-button" onclick="deleteSelectedRow()">Delete</a>
+    </div>
+
+    <div class="button" id="download">
+        <a class="form-button" id="downloadDropdown" onclick="toggleDownloadDropdown()">Download</a>
+        <div class="dropdown-menu" id="downloadMenu" display-style:none>
+            <a class="dropdown-item" href="#" onclick="downloadTable('csv')">CSV</a>
+            <a class="dropdown-item" href="#" onclick="downloadTable('xlsx')">Excel (XLSX)</a>
+            <a class="dropdown-item" href="#" onclick="downloadTable('pdf')">PDF</a>
+        </div>
+    </div>
+
+</div>
+
+<div id="addDialog" class="dialog">
+    <div class="dialog-content">
+        <span class="close" onclick="closeAddDialog()">&times;</span>
+        <h2>Add New Company</h2>
+        <form id="addCompanyForm" method="POST" action="/companies/create">
+            <label for="company">Company</label>
+            <div><input class="field" type="text" id="company" name="company" required></div>
+
+            <label for="erpTool">ERP Tool</label>
+            <div><input class="field" type="text" id="erpTool" name="erpTool" ></div>
+
+            <label for="industry">Industry</label>
+            <div><input class="field" type="text" id="industry" name="industry" required></div>
+
+            <label for="location">Location</label>
+            <div><input class="field" type="text" id="location" name="location" required></div>
+
+            <label for="reference">Reference Name</label>
+            <div><input class="field" type="text" id="reference" name="reference"></div>
+
+            <label for="reference_email">Reference Mail</label>
+            <div><input class="field" type="text" id="reference_email" name="reference_email"></div>
+
+            <label for="reference_number">Reference Phone No.</label>
+            <div><input class="field" type="text" id="reference_number" name="reference_number" ></div>
+
+            <label for="reachedOut">Reached Out</label>
+            <div><input class="field" type="text" id="reachedOut" name="reachedOut" required></div>
+
+            <button type="submit">Add</button>
+        </form>
+    </div>
+</div>
+
+<div class="options">
+    <div class="options-container" id="optionsContainer"></div>
+</div>
+<script>
+    function getQueryParams() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+            location: params.get('location'),
+            erp: params.get('erp'),
+            industry: params.get('industry')
+        };
+    }
+
+    function displayOptions() {
+        const { location, erp, industry } = getQueryParams();
+        const container = document.getElementById('optionsContainer');
+        container.innerHTML = `
+            <div class="option">Location: ${location}</div>
+            <div class="option">ERP: ${erp}</div>
+            <div class="option">Industry: ${industry}</div>
+        `;
+    }
+    displayOptions();
+</script>
+
+<div class="container">
+    <div class="form-container">
+        <p>Here's the data:</p>
+        <div class="table-wrapper">
+            <table class="data-table" id="companyTable">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Company</th>
+                    <th>ERP Tool</th>
+                    <th>Industry</th>
+                    <th>Location</th>
+                    <th>Reference Name</th>
+                    <th>Reference Mail ID</th>
+                    <th>Reference Phone No.</th>
+                    <th>Reached Out?</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="company : ${companiesFilter}">
+                    <td th:text="${company.ID}"></td>
+                    <td th:text="${company.Company}"></td>
+                    <td th:text="${company.erpTool}"></td>
+                    <td th:text="${company.industry}"></td>
+                    <td th:text="${company.location}"></td>
+                    <td th:text="${company.int_ref}"></td>
+                    <td th:text="${company.int_ref_email}"></td>
+                    <td th:text="${company.int_ref_number}"></td>
+                    <td>
+                        <span th:if="${company.reachedOut == 'No'}" th:text="${company.reachedOut}"></span>
+                        <a th:if="${company.reachedOut == 'Yes'}" th:href="@{'/reached-out-details/' + ${company.ID}}" th:text="${company.reachedOut}" style="color: blue; text-decoration: underline;"></a>
+                    </td>
+
+                    <td class="update"><button class="update-btn" >Update</button></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<footer class="footer">
+    <div class="container">
+        <p>&copy; 2025. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const username = localStorage.getItem('username');
+        const email = localStorage.getItem('email');
+
+        // Set the username and email in the dropdown
+        document.querySelector('.name').textContent = username || 'Guest';
+        document.querySelector('.email').textContent = email || 'Not available';
+    });
+
+
+    function toggleDropdown() {
+        const dropdown = document.getElementById('dropdown');
+        dropdown.classList.toggle('active');
+    }
+
+    // Simulate logout action
+    function logout() {
+        showCustomAlert('You have logged out.');
+        window.location.href = '/custom-login';
+    }
+    // Function to show the custom alert
+    function showCustomAlert(message) {
+        // Create a container for the alert
+        const alertContainer = document.createElement('div');
+        alertContainer.classList.add('custom-alert');
+
+        // Add content to the alert
+        alertContainer.innerHTML = `
+            <div class="alert-content">
+                <p>${message}</p>
+                <button onclick="closeCustomAlert()">Close</button>
+            </div>
+        `;
+
+        // Add the alert to the body of the document
+        document.body.appendChild(alertContainer);
+    }
+
+    // Function to close the custom alert
+    function closeCustomAlert() {
+        const alertContainer = document.querySelector('.custom-alert');
+        if (alertContainer) {
+            alertContainer.remove();
+        }
+    }
+
+    function toggleDownloadDropdown() {
+        var menu = document.getElementById("downloadMenu");
+        var button = document.getElementById("downloadDropdown");
+
+        // Get button position
+        var rect = button.getBoundingClientRect();
+
+        // Position the dropdown below the button
+        menu.style.top = rect.bottom + "px";
+        menu.style.left = rect.left + "px";
+
+        // Toggle visibility
+        menu.style.display = (menu.style.display === "block") ? "none" : "block";
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", function(event) {
+        var downloadButton = document.getElementById("downloadDropdown");
+        var menu = document.getElementById("downloadMenu");
+
+        if (!downloadButton.contains(event.target) && !menu.contains(event.target)) {
+            menu.style.display = "none";
+        }
+    });
+    // Replacing all default alerts with showCustomAlert
+    function toggleRowSelection(row) {
+        const previouslySelectedRow = document.querySelector('.data-table tbody tr.selected');
+        if (previouslySelectedRow) {
+            previouslySelectedRow.classList.remove('selected');
+        }
+        row.classList.add('selected');
+        showDeleteButton();
+    }
+
+    function showDeleteButton() {
+        const selectedRow = document.querySelector('.data-table tbody tr.selected');
+        const deleteButton = document.getElementById('delete');
+        if (selectedRow) {
+            deleteButton.style.display = 'inline-block';  // Show the "Delete" button
+        } else {
+            deleteButton.style.display = 'none';  // Hide the "Delete" button
+        }
+    }
+
+   // Function to show the custom confirm dialog
+    function showCustomConfirm(message, callback) {
+        // Create a container for the custom confirm dialog
+        const confirmContainer = document.createElement('div');
+        confirmContainer.classList.add('custom-confirm');
+
+        // Add content to the dialog
+        confirmContainer.innerHTML = `
+            <div class="confirm-content">
+                <p>${message}</p>
+                <button class="confirm-btn">Yes</button>
+                <button class="cancel-btn">No</button>
+            </div>
+        `;
+
+        // Add the dialog to the body
+        document.body.appendChild(confirmContainer);
+
+        // Show the dialog
+        confirmContainer.style.display = 'block';
+
+        // Get the buttons and attach event listeners
+        const confirmBtn = confirmContainer.querySelector('.confirm-btn');
+        const cancelBtn = confirmContainer.querySelector('.cancel-btn');
+
+        // When "Yes" is clicked, execute the callback (delete action)
+        confirmBtn.addEventListener('click', function() {
+            callback(true); // Passing true to callback for confirming deletion
+            closeCustomConfirm();
+        });
+
+        // When "No" is clicked, close the dialog without action
+        cancelBtn.addEventListener('click', function() {
+            callback(false); // Passing false to callback for cancelling the deletion
+            closeCustomConfirm();
+        });
+    }
+
+    // Function to close the custom confirm dialog
+    function closeCustomConfirm() {
+        const confirmContainer = document.querySelector('.custom-confirm');
+        if (confirmContainer) {
+            confirmContainer.remove();
+        }
+    }
+
+    // Example usage in the delete logic
+    function deleteSelectedRow() {
+        const selectedRow = document.querySelector('.data-table tbody tr.selected');
+        if (selectedRow) {
+            const id = selectedRow.querySelector('td').textContent.trim(); // Assuming the first column is the ID
+            const companyNameCell = selectedRow.querySelectorAll('td')[1]; // Get the company name cell
+            const input = companyNameCell.querySelector('input'); // Find the input field inside the cell
+            let companyName = input ? input.value.trim() : companyNameCell.textContent.trim(); // Get the value from input if exists, else textContent
+            console.log(companyName);
+            const message = `Are you sure you want to delete ${companyName}?`;
+
+            // Show the custom confirm dialog
+            showCustomConfirm(message, function(isConfirmed) {
+                if (isConfirmed) {
+                    // Send a DELETE request to the server if confirmed
+                    fetch(`/companies/delete/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            // Remove the row from the table
+                            selectedRow.remove();
+                            showCustomAlert(`"${companyName}" has been deleted successfully.`);
+                        } else {
+                            showCustomAlert(`Failed to delete "${companyName}".`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting company:', error);
+                        showCustomAlert('An error occurred while trying to delete the entry.');
+                    });
+                }
+            });
+        } else {
+            showCustomAlert('Please select a row to delete.');
+        }
+    }
+
+    // Add event listener to each row for selection
+    document.querySelectorAll('.data-table tbody tr').forEach(row => {
+        row.addEventListener('click', function() {
+            toggleRowSelection(row);
+        });
+    });
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const rows = document.querySelectorAll('.data-table tbody tr');
+        const updateButtons = document.querySelectorAll('.update-btn');
+        const deleteButton = document.getElementById('delete');
+        let selectedRow = null;
+        updateButtons.forEach(button => {
+            button.style.display = 'none';
+        });
+
+        deleteButton.style.display = 'none';
+
+        rows.forEach(row => {
+            row.addEventListener('click', function () {
+                // Deselect the previously selected row, if any
+                if (selectedRow && selectedRow !== this) {
+                    selectedRow.classList.remove('selected');
+                    const prevCells = selectedRow.querySelectorAll('td');
+                    prevCells.forEach((cell, index) => {
+                        if (index !== 0 && index !== 9) {
+                            const input = cell.querySelector('input');
+                            if (input) {
+                                cell.textContent = input.value;
+                            }
+                        }
+                    });
+
+                    const prevUpdateButton = selectedRow.querySelector('.update-btn');
+                    if (prevUpdateButton) {
+                        prevUpdateButton.style.display = 'none';
+                    }
+                }
+
+                // Highlight the current row
+                selectedRow = this;
+                this.classList.add('selected');
+
+                // Show the "Delete" button for the selected row
+                deleteButton.style.display = 'inline-block'; // Show "Delete" button
+
+                // Add input fields for editable cells
+                const cells = this.querySelectorAll('td');
+                cells.forEach((cell, index) => {
+                    if (index !== 0 && index !== 9) { // Skip the ID and Update column
+                        const currentValue = cell.textContent.trim();
+                        if (!cell.querySelector('input')) { // Prevent multiple inputs
+                            cell.innerHTML = `<input type="text" value="${currentValue}" />`;
+                        }
+                    }
+                });
+
+                const updateButton = this.querySelector('.update-btn');
+                if (updateButton) {
+                    updateButton.style.display = 'inline-block';
+                }
+            });
+        });
+
+        // Handle Update button click
+        updateButtons.forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.stopPropagation(); // Prevent row selection event
+
+                if (selectedRow) {
+                    const cells = selectedRow.querySelectorAll('td');
+                    const selectedID = selectedRow.querySelector('td:first-child').textContent.trim();
+                    const updatedData = {};
+
+                    cells.forEach((cell, index) => {
+                        if (index !== 0 && index !== 9) {
+                            const input = cell.querySelector('input');
+                            if (input) {
+                                updatedData[index] = input.value;
+                            }
+                        }
+                    });
+
+                    fetch('/companies/update', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id: selectedID,
+                            company: updatedData[1],
+                            erpTool: updatedData[2],
+                            industry: updatedData[3],
+                            location: updatedData[4],
+                            int_ref: updatedData[5],
+                            int_ref_email: updatedData[6],
+                            int_ref_number: updatedData[7],
+                            reachedOut: updatedData[8],
+
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.text().then(text => {
+                                throw new Error(text || 'Something went wrong with the update');
+                            });
+                        }
+                        return response.text();
+                    })
+                    .then(data => {
+                        showCustomAlert('Company updated successfully!');
+                        // Revert input fields to plain text after successful update
+                        cells.forEach((cell, index) => {
+                            if (index !== 0 && index !== 9) {
+                                const input = cell.querySelector('input');
+                                if (input) {
+                                    cell.textContent = input.value;
+                                }
+                            }
+                        });
+                        selectedRow.classList.remove('selected');
+                        selectedRow = null;
+                        button.style.display = 'none';
+                        deleteButton.style.display = 'none';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showCustomAlert(`An error occurred while updating: ${error.message}`);
+                    });
+                }
+            });
+        });
+    });
+
+    function openAddDialog() {
+        document.getElementById("addDialog").style.display = "block";
+    }
+
+    function closeAddDialog() {
+        document.getElementById("addDialog").style.display = "none";
+    }
+
+    document.getElementById("addCompanyForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        const companyData = {
+            company: document.getElementById("company").value || "", // Default to empty string
+            erpTool: document.getElementById("erpTool").value || "",
+            industry: document.getElementById("industry").value || "",
+            location: document.getElementById("location").value || "",
+            int_ref: document.getElementById("reference").value || "",
+            int_ref_email: document.getElementById("reference_email").value || "",
+            int_ref_number: document.getElementById("reference_number").value || "",
+            reachedOut: document.getElementById("reachedOut").value || "",
+            // Uncomment if you want to include a link field
+            // link: document.getElementById("link").value || ""
+        };
+
+        fetch('/companies/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(companyData) // Send the data to the server
+        })
+        .then(response => {
+            // Try to parse the response
+            return response.json().catch(() => {
+                // If the response isn't JSON, return the raw text
+                return { message: response.text() };
+            });
+        })
+        .then(data => {
+            // Handle success
+            showCustomAlert('Company added successfully!');
+        })
+        .catch(error => {
+            // Handle errors
+            console.error('Error:', error);
+            showCustomAlert('Error creating company: ' + error.message);
+        });
+    });
+
+    function downloadTable(format) {
+        let table = document.getElementById("companyTable");
+        let rows = [];
+
+        // Extract main table data
+        for (let i = 0; i < table.rows.length; i++) {
+            let rowData = [];
+            for (let j = 0; j < table.rows[i].cells.length; j++) {
+                rowData.push(table.rows[i].cells[j].innerText);
+            }
+            rows.push(rowData);
+        }
+
+        // Extract company IDs where "Reached Out?" is "Yes"
+        let reachedOutCompanyIds = [];
+        let tableRows = table.querySelectorAll("tbody tr");
+
+        tableRows.forEach((row) => {
+            let reachedOutCell = row.cells[row.cells.length - 2]; // Second last cell contains "Reached Out?"
+            if (reachedOutCell.innerText.trim() === "Yes") {
+                let companyId = row.cells[0].innerText.trim(); // Assuming first column is company ID
+                reachedOutCompanyIds.push(parseInt(companyId)); // Ensure companyId is an integer
+            }
+        });
+
+        // Send table data and company IDs to backend
+        fetch(`/export/data?format=${format}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                tableData: rows,
+                reachedOutCompanyIds: reachedOutCompanyIds
+            })
+        })
+        .then(response => response.blob())
+        .then(blob => {
+            let url = window.URL.createObjectURL(blob);
+            let a = document.createElement("a");
+            a.href = url;
+            a.download = `company_data.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+</script>
+</body>
+</html>
