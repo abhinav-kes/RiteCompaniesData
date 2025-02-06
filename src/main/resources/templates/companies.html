@@ -114,6 +114,10 @@
 <div class="container">
     <div class="form-container">
         <p>Here's the data:</p>
+        <canvas id="dataChart"></canvas>
+        <canvas id="dataPieChart"></canvas>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <div class="table-wrapper">
             <table class="data-table" id="companyTable">
                 <thead>
@@ -567,6 +571,78 @@
         })
         .catch(error => console.error('Error:', error));
     }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const table = document.getElementById("companyTable");
+        const rows = table.querySelectorAll("tbody tr");
+
+        let erpToolCount = {};
+
+        // Collect and count industries from the table
+        rows.forEach(row => {
+            const erpTool = row.cells[2].textContent.trim(); // Assuming Industry is in the 4th column
+            if (erpTool) {
+                erpToolCount[erpTool] = (erpToolCount[erpTool] || 0) + 1;
+            }
+        });
+
+        const labels = Object.keys(erpToolCount);
+        const data = Object.values(erpToolCount);
+
+        // Generate dynamic colors
+        function generateColors(count) {
+            return Array.from({ length: count }, () => {
+                return `hsl(${Math.random() * 360}, 70%, 60%)`; // Random HSL colors
+            });
+        }
+
+        const colors = generateColors(labels.length);
+
+        // Chart Configuration
+        const ctx = document.getElementById("dataChart").getContext("2d");
+        new Chart(ctx, {
+            type: "pie", // Change to "bar" for bar chart
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Companies by Industry",
+                    data: data,
+                    backgroundColor: colors,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: "right",
+                    }
+                }
+            }
+        });
+
+        const ctx2 = document.getElementById("dataPieChart").getContext("2d");
+        new Chart(ctx2, {
+            type: "bar", // Change to "bar" for bar chart
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Companies by Industry",
+                    data: data,
+                    backgroundColor: colors,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: "right",
+                    }
+                }
+            }
+        });
+
+    });
+
 
 </script>
 </body>
